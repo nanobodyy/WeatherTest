@@ -7,7 +7,7 @@
 
 import UIKit
 
-class WeatherService {
+class WeatherManager {
     func fetchWeather(lat: Double, lon: Double, _ compitionHandler: @escaping (Weather) -> Void) {
         let urlString = "https://weatherapi-com.p.rapidapi.com/forecast.json?q=\(lat),\(lon)"
         guard let url = URL(string: urlString) else {return}
@@ -60,6 +60,6 @@ class WeatherService {
                     compitionHandler(image)
                 }
             }
-        }
+        }.resume()
     }
 }

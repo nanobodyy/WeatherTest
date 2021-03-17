@@ -13,6 +13,15 @@ class WeatherTableViewCell: UITableViewCell {
     @IBOutlet weak var descriptionLabel: UILabel!
     @IBOutlet weak var celsiusLabel: UILabel!
     
+    weak var viewModel: WeatherCellViewModelProtocol? {
+        willSet(viewModel) {
+            guard let viewModel = viewModel else {return}
+            cityLabel.text = viewModel.cityName
+            descriptionLabel.text = viewModel.description
+            celsiusLabel.text = String(describing: viewModel.tempC)
+        }
+    }
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
@@ -24,10 +33,6 @@ class WeatherTableViewCell: UITableViewCell {
         // Configure the view for the selected state
     }
     
-    func configure(model: Weather){
-        cityLabel.text = model.name
-        descriptionLabel.text = model.conditionText
-        celsiusLabel.text = "\(model.tempC) Cº"
-    }
+    
     
 }
