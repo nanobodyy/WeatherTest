@@ -14,6 +14,17 @@ class WeatherViewController: UIViewController {
     var viewModel: WeatherViewModelProtocol?
     
     let network = WeatherManager()
+    
+    let searchController = UISearchController(searchResultsController: nil)
+    
+    var searchBarIsEmpty: Bool {
+        guard let text = searchController.searchBar.text else { return true }
+        return text.isEmpty
+    }
+    
+    var isFiltering: Bool {
+        return searchController.isActive && !searchBarIsEmpty
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,7 +32,17 @@ class WeatherViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         configureNavController()
+        configureSerchController()
         viewModel?.viewLoad(tableView: self.tableView)
+    }
+    
+    func configureSerchController() {
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.placeholder = "Поиск"
+        navigationItem.searchController = searchController
+        definesPresentationContext = true
+        navigationItem.hidesSearchBarWhenScrolling = false
     }
 
     func configureNavController() {
@@ -55,13 +76,22 @@ class WeatherViewController: UIViewController {
 
 extension WeatherViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if isFiltering {
+            return viewModel?.filtredNumberOfRows() ?? 0
+        }
         return viewModel?.numberOfRows() ?? 0
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! WeatherTableViewCell
-        let cellViewModel = viewModel?.cellViewModel(forIndexPath: indexPath)
-        cell.viewModel = cellViewModel
+        
+        if isFiltering {
+            let cellViewModel = viewModel?.filtredCellViewModel(forIndexPath: indexPath)
+            cell.viewModel = cellViewModel
+        } else {
+            let cellViewModel = viewModel?.cellViewModel(forIndexPath: indexPath)
+            cell.viewModel = cellViewModel
+        }
         return cell
     }
 }
@@ -83,11 +113,24 @@ extension WeatherViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let detailViewController = DetailViewController()
-        viewModel?.selectRow(atIndexPath: indexPath)
-        let detailViewModel = viewModel?.viewModelForSelectedRow()
-        detailViewController.viewModel = detailViewModel
         
+        if isFiltering {
+            viewModel?.filteredSelectRow(atIndexPath: indexPath)
+            let detailViewModel = viewModel?.filtredViewModelForSelectedRow()
+            detailViewController.viewModel = detailViewModel
+        } else {
+            viewModel?.selectRow(atIndexPath: indexPath)
+            let detailViewModel = viewModel?.viewModelForSelectedRow()
+            detailViewController.viewModel = detailViewModel
+        }
+    
         self.navigationController?.pushViewController(detailViewController, animated: true)
-        //self.present(detailViewController, animated: true, completion: nil)
     }
+}
+
+extension WeatherViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        viewModel?.filterContentForSearchTexy(searchController.searchBar.text!, tableview: tableView)
+    }
+    
 }

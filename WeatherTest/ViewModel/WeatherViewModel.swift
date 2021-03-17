@@ -15,9 +15,14 @@ protocol WeatherViewModelProtocol {
     
     func numberOfRows() -> Int
     func cellViewModel(forIndexPath indexPath: IndexPath) -> WeatherCellViewModelProtocol?
-    
     func selectRow(atIndexPath indexPath: IndexPath)
     func viewModelForSelectedRow() -> DetailViewModelProtocol?
+    
+    func filterContentForSearchTexy(_ searchText: String, tableview: UITableView)
+    func filtredNumberOfRows() -> Int
+    func filtredCellViewModel(forIndexPath indexPath: IndexPath) -> WeatherCellViewModelProtocol?
+    func filteredSelectRow(atIndexPath indexPath: IndexPath)
+    func filtredViewModelForSelectedRow() -> DetailViewModelProtocol?
 }
 
 class WeatherViewModel: WeatherViewModelProtocol {
@@ -25,14 +30,17 @@ class WeatherViewModel: WeatherViewModelProtocol {
     var weatherManager = WeatherManager()
     var cities = ["Москва", "Киев", "Коломна"]
     var weathersCities: [Weather] = []
+    var filtered: [Weather] = []
     
     var selectedIndexPath: IndexPath?
+    var filtredSelectedIndexPath: IndexPath?
     
     func viewLoad(tableView: UITableView) {
         didFetch(data: cities, tableView: tableView)
         print(1)
     }
     
+    // MARK: tableViewDataSource
     func numberOfRows() -> Int {
         return weathersCities.count
     }
@@ -51,6 +59,32 @@ class WeatherViewModel: WeatherViewModelProtocol {
         self.selectedIndexPath = indexPath
     }
     
+    // MARK: SeatchBarResult
+    
+    func filterContentForSearchTexy(_ searchText: String, tableview: UITableView) {
+        filtered = weathersCities.filter({ $0.name.contains(searchText) })
+        tableview.reloadData()
+    }
+    
+    func filtredNumberOfRows() -> Int {
+        return filtered.count
+    }
+    
+    func filtredCellViewModel(forIndexPath indexPath: IndexPath) -> WeatherCellViewModelProtocol?  {
+        let weather = filtered[indexPath.row]
+        return WeatherCellViewModel(weather: weather)
+    }
+    
+    func filteredSelectRow(atIndexPath indexPath: IndexPath) {
+        self.filtredSelectedIndexPath = indexPath
+    }
+    
+    func filtredViewModelForSelectedRow() -> DetailViewModelProtocol? {
+        guard let filteredSelectedIndexPath = filtredSelectedIndexPath else { return nil}
+        return DetailViewModel(weather: filtered[filteredSelectedIndexPath.row])
+    }
+    
+    // MARK: WeatherData
     func addNewCity(tableView:UITableView, name: String) {
         self.getCoord(city: name) { (location, error) in
             guard let location = location else { return }
