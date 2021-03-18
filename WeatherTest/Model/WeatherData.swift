@@ -32,8 +32,8 @@ struct Weather {
         case "Heavy snow": return "Сильный снег"
         case "Patchy light rain with thunder": return "Легкий дождь с грозой"
         case "Light sleet": return "Легкий мокрый снег"
-        case "moderate snow": return "Легкий снег"
-        case "patchy light snow": return "Легкий снег"
+        case "Moderate snow": return "Легкий снег"
+        case "Patchy light snow": return "Легкий снег"
         default: return "Загрузка..."
         }
     }

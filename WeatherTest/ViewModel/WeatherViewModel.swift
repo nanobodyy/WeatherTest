@@ -23,12 +23,16 @@ protocol WeatherViewModelProtocol {
     func filtredCellViewModel(forIndexPath indexPath: IndexPath) -> WeatherCellViewModelProtocol?
     func filteredSelectRow(atIndexPath indexPath: IndexPath)
     func filtredViewModelForSelectedRow() -> DetailViewModelProtocol?
+    
+    func addDataBase(city: String)
+    func deleteDatBase(name: String)
 }
 
 class WeatherViewModel: WeatherViewModelProtocol {
 
     var weatherManager = WeatherManager()
-    var cities = ["Москва", "Киев", "Коломна"]
+    //var cities = ["Москва", "Киев", "Коломна"]
+    var cities: [City] = []
     var weathersCities: [Weather] = []
     var filtered: [Weather] = []
     
@@ -36,6 +40,7 @@ class WeatherViewModel: WeatherViewModelProtocol {
     var filtredSelectedIndexPath: IndexPath?
     
     func viewLoad(tableView: UITableView) {
+        fetchData()
         didFetch(data: cities, tableView: tableView)
         print(1)
     }
@@ -101,13 +106,14 @@ class WeatherViewModel: WeatherViewModelProtocol {
         }
     }
     
-    func didFetch(data: [String], tableView: UITableView){
+    func didFetch(data: [City], tableView: UITableView){
         for i in data {
-            self.getCoord(city: i) { (location, error) in
+            self.getCoord(city: i.name) { (location, error) in
                 guard let location = location else { return }
                 self.weatherManager.fetchWeather(lat: location.latitude, lon: location.longitude) { (weather) in
                     var weather = weather
-                    weather.name = i
+                    print(weather)
+                    weather.name = i.name!
                     self.weathersCities.append(weather)
                     DispatchQueue.main.async {
                         tableView.reloadData()
@@ -126,5 +132,57 @@ class WeatherViewModel: WeatherViewModelProtocol {
         CLGeocoder().geocodeAddressString(city) { (placemark, error) in
             completion(placemark?.first?.location!.coordinate, error )
         }
+    }
+    
+    // MARK: DataBase
+    
+    func fetchData(){
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            let context = appDelegate.persistentContainer.viewContext
+    
+            let fetchRequest: NSFetchRequest<City> = City.fetchRequest()
+    
+            do {
+                cities = try context.fetch(fetchRequest)
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    
+    func addDataBase(city: String) {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let context = appDelegate.persistentContainer.viewContext
+    
+        let entity = NSEntityDescription.entity(forEntityName: "City", in: context)
+        let taskObject = NSManagedObject(entity: entity!, insertInto: context) as! City
+        taskObject.name = city
+    
+        do {
+            try context.save()
+            cities.append(taskObject)
+        } catch {
+            print(error.localizedDescription)
+        }
+        self.fetchData()
+    }
+    
+    func deleteDatBase(name: String){
+        
+        
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let context = appDelegate.persistentContainer.viewContext
+        
+        let fetchRequest: NSFetchRequest<City> = City.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "name == %@", name)
+        
+        do {
+            let result = try context.fetch(fetchRequest)
+            context.delete(result[0])
+            try context.save()
+            print("delete")
+        } catch let error as NSError {
+            print(error.localizedDescription)
+        }
+        self.fetchData()
     }
 }

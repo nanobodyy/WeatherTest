@@ -58,6 +58,7 @@ class WeatherViewController: UIViewController {
             guard let text = textField?.text else { return }
             
             self.viewModel?.addNewCity(tableView: self.tableView, name: text)
+            self.viewModel?.addDataBase(city: text)
         }
         
         let cancel = UIAlertAction(title: "Закрыть", style: .cancel, handler: nil)
@@ -104,9 +105,12 @@ extension WeatherViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         guard editingStyle == .delete else { return }
+        let cellViewModel = viewModel?.cellViewModel(forIndexPath: indexPath)
+        guard let cityName = cellViewModel?.cityName else { return }
         
+        self.viewModel?.deleteDatBase(name: cityName)
         self.viewModel?.deleteCity(index: indexPath)
-        
+
         tableView.deleteRows(at: [indexPath], with: .automatic)
         tableView.reloadData()
     }
