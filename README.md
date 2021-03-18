@@ -11,4 +11,4 @@
 - Внешние зависимости
 - Storyboard
 
-![weatherTest](https://user-images.githubusercontent.com/52631476/111601302-48954480-87e3-11eb-8408-163108bb9e31.gif)
+![weather](https://user-images.githubusercontent.com/52631476/111602290-41226b00-87e4-11eb-9c25-e7c9ec66eda6.gif)
