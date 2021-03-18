@@ -30,9 +30,10 @@ protocol WeatherViewModelProtocol {
 
 class WeatherViewModel: WeatherViewModelProtocol {
 
-    var weatherManager = WeatherManager()
+    private var weatherManager = WeatherManager()
+    private var dataManager = DataManager()
     //var cities = ["Москва", "Киев", "Коломна"]
-    var cities: [City] = []
+    //var cities: [City] = []
     var weathersCities: [Weather] = []
     var filtered: [Weather] = []
     
@@ -40,8 +41,8 @@ class WeatherViewModel: WeatherViewModelProtocol {
     var filtredSelectedIndexPath: IndexPath?
     
     func viewLoad(tableView: UITableView) {
-        fetchData()
-        didFetch(data: cities, tableView: tableView)
+        fetchDataBase()
+        didFetch(data: dataManager.cities, tableView: tableView)
         print(1)
     }
     
@@ -65,7 +66,6 @@ class WeatherViewModel: WeatherViewModelProtocol {
     }
     
     // MARK: SeatchBarResult
-    
     func filterContentForSearchTexy(_ searchText: String, tableview: UITableView) {
         filtered = weathersCities.filter({ $0.name.contains(searchText) })
         tableview.reloadData()
@@ -89,7 +89,7 @@ class WeatherViewModel: WeatherViewModelProtocol {
         return DetailViewModel(weather: filtered[filteredSelectedIndexPath.row])
     }
     
-    // MARK: WeatherData
+    // MARK: Network
     func addNewCity(tableView:UITableView, name: String) {
         self.getCoord(city: name) { (location, error) in
             guard let location = location else { return }
@@ -135,54 +135,15 @@ class WeatherViewModel: WeatherViewModelProtocol {
     }
     
     // MARK: DataBase
-    
-    func fetchData(){
-            let appDelegate = UIApplication.shared.delegate as! AppDelegate
-            let context = appDelegate.persistentContainer.viewContext
-    
-            let fetchRequest: NSFetchRequest<City> = City.fetchRequest()
-    
-            do {
-                cities = try context.fetch(fetchRequest)
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
+    func fetchDataBase(){
+        dataManager.fetchData()
+    }
     
     func addDataBase(city: String) {
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        let context = appDelegate.persistentContainer.viewContext
-    
-        let entity = NSEntityDescription.entity(forEntityName: "City", in: context)
-        let taskObject = NSManagedObject(entity: entity!, insertInto: context) as! City
-        taskObject.name = city
-    
-        do {
-            try context.save()
-            cities.append(taskObject)
-        } catch {
-            print(error.localizedDescription)
-        }
-        self.fetchData()
+        dataManager.addDataBase(city: city)
     }
     
     func deleteDatBase(name: String){
-        
-        
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        let context = appDelegate.persistentContainer.viewContext
-        
-        let fetchRequest: NSFetchRequest<City> = City.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "name == %@", name)
-        
-        do {
-            let result = try context.fetch(fetchRequest)
-            context.delete(result[0])
-            try context.save()
-            print("delete")
-        } catch let error as NSError {
-            print(error.localizedDescription)
-        }
-        self.fetchData()
+        dataManager.deleteDatBase(name: name)
     }
 }
