@@ -10,7 +10,7 @@ import CoreData
 
 protocol WeatherViewModelProtocol {
     func viewLoad(tableView: UITableView)
-    func addNewCity(tableView:UITableView, name: String)
+    func addNewCity(name: String, complitionHandler:@escaping (Int) -> Void)
     func deleteCity(index: IndexPath)
     
     func numberOfRows() -> Int
@@ -32,8 +32,7 @@ class WeatherViewModel: WeatherViewModelProtocol {
 
     private var weatherManager = WeatherManager()
     private var dataManager = DataManager()
-    //var cities = ["Москва", "Киев", "Коломна"]
-    //var cities: [City] = []
+    
     var weathersCities: [Weather] = []
     var filtered: [Weather] = []
     
@@ -90,18 +89,14 @@ class WeatherViewModel: WeatherViewModelProtocol {
     }
     
     // MARK: Network
-    func addNewCity(tableView:UITableView, name: String) {
+    func addNewCity(name: String, complitionHandler:@escaping (Int) -> Void) {
         self.getCoord(city: name) { (location, error) in
             guard let location = location else { return }
             self.weatherManager.fetchWeather(lat: location.latitude, lon: location.longitude) { (weather) in
                 var weather = weather
                 weather.name = name
                 self.weathersCities.append(weather)
-                DispatchQueue.main.async {
-                    tableView.beginUpdates()
-                    tableView.insertRows(at: [IndexPath(row: self.weathersCities.count - 1, section: 0)], with: .automatic)
-                    tableView.endUpdates()
-                }
+                complitionHandler(self.weathersCities.count)
             }
         }
     }

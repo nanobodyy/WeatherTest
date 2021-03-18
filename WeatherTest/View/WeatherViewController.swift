@@ -57,7 +57,13 @@ class WeatherViewController: UIViewController {
             let textField = ac.textFields?[0]
             guard let text = textField?.text else { return }
             
-            self.viewModel?.addNewCity(tableView: self.tableView, name: text)
+            self.viewModel?.addNewCity(name: text, complitionHandler: { (count) in
+                DispatchQueue.main.async {
+                    self.tableView.beginUpdates()
+                    self.tableView.insertRows(at: [IndexPath(row: count - 1, section: 0)], with: .automatic)
+                    self.tableView.endUpdates()
+                }
+            })
             self.viewModel?.addDataBase(city: text)
         }
         
